@@ -1,56 +1,41 @@
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
-import { HOME } from "@/constants/testIds";
+import { Toaster } from "@/components/ui/sonner";
+import { AuthProvider } from "@/context/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Layout from "@/components/Layout";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+import Login from "@/pages/Login";
+import Dashboard from "@/pages/Dashboard";
+import MyRequests from "@/pages/MyRequests";
+import NewRequest from "@/pages/NewRequest";
+import Approvals from "@/pages/Approvals";
+import Licenses from "@/pages/Licenses";
+import Renewals from "@/pages/Renewals";
+import Reclamation from "@/pages/Reclamation";
+import Audit from "@/pages/Audit";
 
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
-
+export default function App() {
   return (
-    <div>
-      <header className="App-header">
-        <a
-          data-testid={HOME.emergentLink}
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
-
-function App() {
-  return (
-    <div className="App">
+    <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/my-requests" element={<MyRequests />} />
+            <Route path="/my-requests/new" element={<NewRequest />} />
+            <Route path="/approvals" element={<ProtectedRoute roles={["manager", "admin"]}><Approvals /></ProtectedRoute>} />
+            <Route path="/licenses" element={<ProtectedRoute roles={["manager", "admin"]}><Licenses /></ProtectedRoute>} />
+            <Route path="/renewals" element={<Renewals />} />
+            <Route path="/reclamation" element={<ProtectedRoute roles={["manager", "admin"]}><Reclamation /></ProtectedRoute>} />
+            <Route path="/audit" element={<ProtectedRoute roles={["manager", "admin"]}><Audit /></ProtectedRoute>} />
           </Route>
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </div>
+      <Toaster position="top-right" richColors />
+    </AuthProvider>
   );
 }
-
-export default App;
