@@ -1,0 +1,79 @@
+{
+  "theme": "Light",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "typography": {
+    "heading_font": "Outfit",
+    "body_font": "IBM Plex Sans",
+    "hierarchy": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-semibold text-zinc-900",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-medium text-zinc-900",
+      "h3": "text-xl sm:text-2xl font-medium text-zinc-900",
+      "h4": "text-lg font-medium text-zinc-800",
+      "body": "text-sm text-zinc-600 leading-relaxed",
+      "labels": "text-xs tracking-[0.2em] uppercase font-bold text-zinc-500"
+    }
+  },
+  "colors": {
+    "background": "#F4F4F5",
+    "surface_primary": "#FFFFFF",
+    "surface_secondary": "#FAFAFA",
+    "primary_accent": "#0F52BA",
+    "primary_hover": "#0B3D8A",
+    "text_main": "#18181B",
+    "text_muted": "#71717A",
+    "success": "#16A34A",
+    "danger": "#DC2626",
+    "warning": "#D97706",
+    "border": "#E4E4E7"
+  },
+  "spacing_and_layout": {
+    "grid_system": "Control Room Grid: grid-cols-1 md:grid-cols-3 lg:grid-cols-4 with gap-4 or gap-6",
+    "padding_scale": "Use p-6 or p-8 for main containers. High density inside widgets.",
+    "border_radius": "rounded-none or max rounded-md (8px) for sharp, technical feel",
+    "alignment": "Left-align dense data, right-align numbers in tables, top-left for North Star metric"
+  },
+  "components": {
+    "navigation": "Collapsible left-sidebar with high-contrast active states. Sidebar background #18181B, text #A1A1AA, active text #FFFFFF with left-border accent.",
+    "cards": "Flat background #FFFFFF, 1px solid border #E4E4E7, NO box-shadow. Hover: border-zinc-400 transition-colors.",
+    "buttons": "Sharp corners (rounded-sm), high contrast. Primary: bg-[#0F52BA] text-white. Secondary: bg-white border border-zinc-300 text-zinc-900.",
+    "tables": "Dense. border-collapse. Subdued header background (#F4F4F5), pure white rows, 1px bottom border. Hover row: bg-zinc-50.",
+    "charts": "Recharts. Use monochrome for base lines, primary accent for utilization, danger red for overages.",
+    "forms": "Shadcn UI customized: strict rectangular inputs, 1px borders, subtle focus ring (focus:ring-2 focus:ring-[#0F52BA]/20)."
+  },
+  "motion_and_interactions": {
+    "hover": "Subtle border color shifts, NEVER layout shifting. transition-colors duration-200.",
+    "active": "scale-[0.98] on buttons.",
+    "loading": "Use skeletal loaders for tables rather than spinners."
+  },
+  "accessibility": {
+    "contrast": "Ensure 4.5:1 ratio for normal text.",
+    "testing": "MANDATORY: data-testid on every button, input, tab, and row action.",
+    "focus": "Visible focus outlines required for all interactive elements."
+  },
+  "media_and_assets": {
+    "icons": "lucide-react",
+    "image_urls": [
+      {
+        "category": "auth_background",
+        "url": "https://images.pexels.com/photos/4252525/pexels-photo-4252525.jpeg",
+        "description": "Minimal abstract layer background for the SSO login screen to provide a polished corporate feel."
+      },
+      {
+        "category": "user_avatar",
+        "url": "https://images.pexels.com/photos/33100431/pexels-photo-33100431.jpeg",
+        "description": "Default profile picture for the logged-in user in the top right or sidebar."
+      }
+    ]
+  },
+  "instructions_to_main_agent": [
+    "Install Google Fonts 'Outfit' and 'IBM Plex Sans' in index.html. Do NOT use Inter.",
+    "Implement the UI using raw HTML/Tailwind for layouts and Shadcn for interactive logic (Dialogs, Selects, Tables).",
+    "Dashboard must utilize the 'Control Room' grid: dense, data-heavy, maximizing viewport space without generic cards.",
+    "Sidebar should be collapsible to maximize data table width.",
+    "Place the North Star Metric (e.g., Total Licenses Allocated) prominently in the top-left of the Dashboard.",
+    "Color is functional: Use Red ONLY for errors/reclamations, Green ONLY for active/approved. Primary Blue for CTAs.",
+    "All testable elements MUST contain semantic data-testid attributes (e.g. data-testid='login-submit').",
+    "Add 'recharts' library for the Analytics dashboard visualizations.",
+    "Use standard React .js files, NOT .tsx."
+  ]
+}
