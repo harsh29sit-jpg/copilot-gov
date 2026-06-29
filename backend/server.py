@@ -121,6 +121,7 @@ async def notify(user_id: str, ntype: str, title: str, body: str, meta: Optional
 class LoginInput(BaseModel):
     email: EmailStr
     password: str
+    portal: Optional[Literal["employee", "manager"]] = None
 
 
 class UserOut(BaseModel):
@@ -171,6 +172,10 @@ async def login(data: LoginInput, response: Response):
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(data.password, user["password_hash"]):
         raise HTTPException(401, "Invalid email or password")
+    if data.portal == "employee" and user["role"] != "employee":
+        raise HTTPException(403, "This account belongs to the Manager portal. Switch to Manager login.")
+    if data.portal == "manager" and user["role"] not in ("manager", "admin"):
+        raise HTTPException(403, "This account belongs to the Employee portal. Switch to Employee login.")
     token = make_token(user["id"], user["email"], user["role"])
     response.set_cookie("access_token", token, httponly=True, secure=False, samesite="lax", max_age=86400, path="/")
     return {

@@ -26,7 +26,7 @@ import {
 
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["employee", "manager", "admin"] },
-  { to: "/my-requests", label: "My Requests", icon: FileText, roles: ["employee", "manager", "admin"] },
+  { to: "/my-requests", label: "My Requests", icon: FileText, roles: ["employee"] },
   { to: "/approvals", label: "Approvals", icon: Inbox, roles: ["manager", "admin"] },
   { to: "/licenses", label: "Licenses", icon: KeyRound, roles: ["manager", "admin"] },
   { to: "/renewals", label: "Renewals", icon: CalendarClock, roles: ["employee", "manager", "admin"] },

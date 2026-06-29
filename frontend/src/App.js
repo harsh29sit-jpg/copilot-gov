@@ -24,8 +24,8 @@ export default function App() {
           <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/my-requests" element={<MyRequests />} />
-            <Route path="/my-requests/new" element={<NewRequest />} />
+            <Route path="/my-requests" element={<ProtectedRoute roles={["employee"]}><MyRequests /></ProtectedRoute>} />
+            <Route path="/my-requests/new" element={<ProtectedRoute roles={["employee"]}><NewRequest /></ProtectedRoute>} />
             <Route path="/approvals" element={<ProtectedRoute roles={["manager", "admin"]}><Approvals /></ProtectedRoute>} />
             <Route path="/licenses" element={<ProtectedRoute roles={["manager", "admin"]}><Licenses /></ProtectedRoute>} />
             <Route path="/renewals" element={<Renewals />} />

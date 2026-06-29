@@ -20,10 +20,10 @@ export function AuthProvider({ children }) {
     refresh();
   }, [refresh]);
 
-  const login = async (email, password) => {
+  const login = async (email, password, portal) => {
     setError("");
     try {
-      const { data } = await api.post("/auth/login", { email, password });
+      const { data } = await api.post("/auth/login", { email, password, portal });
       if (data?.token) localStorage.setItem("auth_token", data.token);
       setUser(data.user);
       return true;
