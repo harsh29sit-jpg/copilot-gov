@@ -1,0 +1,15 @@
+{
+  "summary": "Retested manager Approvals decide dialog after fix (submit(nextDecision) receives decision as argument). Both approve and reject happy paths verified end-to-end via UI. NO 'Input should be approved or rejected' error appeared. Toasts displayed as expected and status pills updated on the correct tabs.",
+  "tested_scope": ["frontend", "integration"],
+  "passed": [
+    "Priya login via portal-manager-tab -> /approvals -> Review Hiro Tanaka -> Approve & assign -> green toast 'Request approved & license assigned' -> Assigned tab shows Hiro with 'assigned' pill. No error banner.",
+    "Marcus login via portal-manager-tab -> /approvals -> Review Ivy Brown -> comment 'Insufficient justification' -> Reject -> green toast 'Request rejected' -> Rejected tab shows Ivy with 'rejected' pill. No error banner.",
+    "Confirmed absence of prior 'Input should be approved or rejected' 422 validation error on both flows."
+  ],
+  "failed": [],
+  "action_items": [],
+  "success_rate": {"backend": "n/a", "frontend": "100%"},
+  "retest_needed": false,
+  "full_testing_deferred": true,
+  "notes": "Targeted retest per request; did not explore other flows. Screenshots captured for both approve and reject confirmations showing toasts and updated status pills."
+}
