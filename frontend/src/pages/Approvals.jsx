@@ -12,11 +12,11 @@ function DecisionDialog({ req, onDone }) {
   const [comments, setComments] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const submit = async () => {
+  const submit = async (nextDecision) => {
     setBusy(true);
     try {
-      await api.post(`/requests/${req.id}/decide`, { decision, comments });
-      toast.success(decision === "approved" ? "Request approved & license assigned" : "Request rejected");
+      await api.post(`/requests/${req.id}/decide`, { decision: nextDecision, comments });
+      toast.success(nextDecision === "approved" ? "Request approved & license assigned" : "Request rejected");
       setOpen(false); setDecision(null); setComments("");
       onDone();
     } catch (e) {
@@ -57,7 +57,7 @@ function DecisionDialog({ req, onDone }) {
             data-testid={`reject-btn-${req.id}`}
             className="btn-danger"
             disabled={busy}
-            onClick={() => { setDecision("rejected"); setTimeout(submit, 0); }}
+            onClick={() => { setDecision("rejected"); submit("rejected"); }}
           >
             Reject
           </button>
@@ -65,7 +65,7 @@ function DecisionDialog({ req, onDone }) {
             data-testid={`approve-btn-${req.id}`}
             className="btn-primary"
             disabled={busy}
-            onClick={() => { setDecision("approved"); setTimeout(submit, 0); }}
+            onClick={() => { setDecision("approved"); submit("approved"); }}
           >
             Approve & assign
           </button>
