@@ -15,6 +15,7 @@ from fastapi import FastAPI, APIRouter, Depends, HTTPException, Request, Respons
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, EmailStr
+import github_copilot as gh
 
 # ---------------- DB ----------------
 mongo_url = os.environ["MONGO_URL"]
@@ -141,6 +142,7 @@ class RequestCreate(BaseModel):
     cost_center: str
     manager_id: str
     justification: str
+    github_username: Optional[str] = ""
 
 
 class RequestDecide(BaseModel):
@@ -231,6 +233,7 @@ async def create_request(payload: RequestCreate, user: dict = Depends(get_curren
         "cost_center": payload.cost_center,
         "manager_id": payload.manager_id,
         "justification": payload.justification,
+        "github_username": (payload.github_username or user.get("github_username") or "").strip(),
         "status": "pending",
         "created_at": now_iso(),
         "decided_at": None,
@@ -302,10 +305,17 @@ async def decide_request(rid: str, payload: RequestDecide, user: dict = Depends(
         if not lic or lic["status"] != "available":
             raise HTTPException(400, "License not available")
         ts = now_iso()
+        gh_username = req.get("github_username") or ""
+        gh_result = await gh.assign_seat(gh_username)
         await db.licenses.update_one({"id": lic_id}, {"$set": {
             "status": "assigned",
             "assigned_user_id": req["employee_id"],
             "assigned_user_name": req["employee_name"],
+            "github_username": gh_username,
+            "gh_sync_status": gh_result.get("sync_status"),
+            "gh_sync_error": gh_result.get("error"),
+            "gh_sync_message": gh_result.get("message"),
+            "gh_last_activity_at": None,
             "project": req["project"],
             "team": req["team"],
             "cost_center": req["cost_center"],
@@ -371,10 +381,17 @@ async def reclaim_license(lid: str, user: dict = Depends(require_role("manager",
     if not lic:
         raise HTTPException(404, "License not found")
     prev_user = lic.get("assigned_user_id")
+    gh_username = lic.get("github_username") or ""
+    gh_result = await gh.revoke_seat(gh_username) if gh_username else {"sync_status": "mock", "message": "No GitHub username"}
     await db.licenses.update_one({"id": lid}, {"$set": {
         "status": "available",
         "assigned_user_id": None,
         "assigned_user_name": None,
+        "github_username": None,
+        "gh_sync_status": None,
+        "gh_sync_error": None,
+        "gh_sync_message": None,
+        "gh_last_activity_at": None,
         "project": None,
         "team": None,
         "cost_center": None,
@@ -390,8 +407,8 @@ async def reclaim_license(lid: str, user: dict = Depends(require_role("manager",
         await notify(prev_user, "license_reclaimed", "Your Copilot license was reclaimed",
                      "Your license has been reclaimed by your manager and returned to the pool.",
                      {"license_id": lid})
-    await log_audit(user, "license.reclaimed", "license", lid, {"previous_user": prev_user})
-    return {"ok": True}
+    await log_audit(user, "license.reclaimed", "license", lid, {"previous_user": prev_user, "gh_sync": gh_result.get("sync_status"), "gh_error": gh_result.get("error")})
+    return {"ok": True, "gh_sync": gh_result}
 
 
 @api.post("/licenses/release")
@@ -399,10 +416,17 @@ async def release_my_license(user: dict = Depends(get_current_user)):
     lic = await db.licenses.find_one({"assigned_user_id": user["id"], "status": "assigned"})
     if not lic:
         raise HTTPException(404, "You have no assigned license")
+    gh_username = lic.get("github_username") or ""
+    gh_result = await gh.revoke_seat(gh_username) if gh_username else {"sync_status": "mock"}
     await db.licenses.update_one({"id": lic["id"]}, {"$set": {
         "status": "available",
         "assigned_user_id": None,
         "assigned_user_name": None,
+        "github_username": None,
+        "gh_sync_status": None,
+        "gh_sync_error": None,
+        "gh_sync_message": None,
+        "gh_last_activity_at": None,
         "project": None,
         "team": None,
         "cost_center": None,
@@ -414,8 +438,33 @@ async def release_my_license(user: dict = Depends(get_current_user)):
         {"employee_id": user["id"], "assigned_license_id": lic["id"], "status": "assigned"},
         {"$set": {"status": "released"}},
     )
-    await log_audit(user, "license.released", "license", lic["id"], {})
-    return {"ok": True}
+    await log_audit(user, "license.released", "license", lic["id"], {"gh_sync": gh_result.get("sync_status")})
+    return {"ok": True, "gh_sync": gh_result}
+
+
+@api.post("/licenses/{lid}/gh-sync")
+async def gh_resync(lid: str, user: dict = Depends(require_role("manager", "admin"))):
+    lic = await db.licenses.find_one({"id": lid})
+    if not lic:
+        raise HTTPException(404, "License not found")
+    gh_username = lic.get("github_username") or ""
+    if lic.get("status") != "assigned":
+        raise HTTPException(400, "License is not assigned; nothing to sync")
+    result = await gh.assign_seat(gh_username)
+    seat = await gh.get_seat_for_user(gh_username)
+    await db.licenses.update_one({"id": lid}, {"$set": {
+        "gh_sync_status": result.get("sync_status"),
+        "gh_sync_error": result.get("error"),
+        "gh_sync_message": result.get("message"),
+        "gh_last_activity_at": seat.get("last_activity_at") if seat else None,
+    }})
+    await log_audit(user, "license.gh_resynced", "license", lid, {"gh_sync": result.get("sync_status")})
+    return {"ok": True, "gh_sync": result, "seat": seat}
+
+
+@api.get("/meta/github")
+async def gh_status(user: dict = Depends(get_current_user)):
+    return {"enabled": gh.is_enabled(), "org": gh.GITHUB_ORG or None}
 
 
 # ---------------- Renewals ----------------

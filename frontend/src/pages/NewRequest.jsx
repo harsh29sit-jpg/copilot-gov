@@ -19,6 +19,7 @@ export default function NewRequest() {
     cost_center: user.cost_center || "",
     manager_id: user.manager_id || "",
     justification: "",
+    github_username: user.github_username || "",
   });
   const [err, setErr] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -111,6 +112,18 @@ export default function NewRequest() {
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div>
+          <Label className="text-[11px] uppercase tracking-[0.16em] font-semibold text-zinc-600">GitHub username</Label>
+          <Input
+            data-testid="github-username-input"
+            value={form.github_username}
+            onChange={update("github_username")}
+            placeholder="e.g. alice-park"
+            className="mt-1.5 h-10 rounded-sm font-mono"
+          />
+          <div className="text-[11px] text-zinc-500 mt-1">Required so the actual GitHub Copilot seat can be assigned to you upon approval.</div>
         </div>
 
         <div>

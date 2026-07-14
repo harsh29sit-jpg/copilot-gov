@@ -5,7 +5,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Search, RotateCcw } from "lucide-react";
+import { Search, RotateCcw, RefreshCw, Github } from "lucide-react";
 
 export default function Licenses() {
   const [rows, setRows] = useState([]);
@@ -27,6 +27,19 @@ export default function Licenses() {
     try {
       await api.post(`/licenses/${id}/reclaim`);
       toast.success("License reclaimed and returned to pool");
+      load();
+    } catch (e) {
+      toast.error(formatApiError(e.response?.data?.detail) || e.message);
+    }
+  };
+
+  const resync = async (id) => {
+    try {
+      const { data } = await api.post(`/licenses/${id}/gh-sync`);
+      const st = data?.gh_sync?.sync_status;
+      if (st === "synced") toast.success("GitHub seat synced");
+      else if (st === "mock") toast.info("GitHub integration disabled (mock mode)");
+      else toast.error(`GitHub sync failed: ${data?.gh_sync?.error || "unknown"}`);
       load();
     } catch (e) {
       toast.error(formatApiError(e.response?.data?.detail) || e.message);
@@ -78,6 +91,7 @@ export default function Licenses() {
               <th>Cost Center</th>
               <th>Last renewal</th>
               <th>Next renewal</th>
+              <th>GitHub</th>
               <th className="num">Actions</th>
             </tr>
           </thead>
@@ -97,11 +111,27 @@ export default function Licenses() {
                 <td className="font-mono text-[12px]">{r.cost_center || <span className="text-zinc-400">—</span>}</td>
                 <td className="font-mono text-[12px]">{r.last_renewal_at ? new Date(r.last_renewal_at).toLocaleDateString() : "—"}</td>
                 <td className="font-mono text-[12px]">{r.next_renewal_due ? new Date(r.next_renewal_due).toLocaleDateString() : "—"}</td>
+                <td>
+                  {r.status === "assigned" ? (
+                    <div className="flex flex-col gap-1">
+                      <span className="font-mono text-[11px] text-zinc-700 flex items-center gap-1"><Github size={11}/>{r.github_username || <span className="text-zinc-400">—</span>}</span>
+                      {r.gh_sync_status === "synced" && <span className="pill pill-assigned text-[10px]">Synced</span>}
+                      {r.gh_sync_status === "mock" && <span className="pill pill-available text-[10px]">Mock</span>}
+                      {r.gh_sync_status === "failed" && <span className="pill pill-rejected text-[10px]" title={r.gh_sync_message}>Failed: {r.gh_sync_error}</span>}
+                      {r.gh_last_activity_at && <span className="text-[10px] text-zinc-500">Active {new Date(r.gh_last_activity_at).toLocaleDateString()}</span>}
+                    </div>
+                  ) : <span className="text-[11px] text-zinc-400">—</span>}
+                </td>
                 <td className="num">
                   {r.status === "assigned" ? (
-                    <button data-testid={`reclaim-btn-${r.id}`} onClick={() => reclaim(r.id)} className="btn-danger text-[12px] py-1.5 px-3 inline-flex items-center gap-1.5">
-                      <RotateCcw size={12} /> Reclaim
-                    </button>
+                    <div className="flex items-center gap-1.5 justify-end">
+                      <button data-testid={`resync-btn-${r.id}`} onClick={() => resync(r.id)} className="btn-ghost text-[12px] py-1.5 px-2.5 inline-flex items-center gap-1" title="Resync with GitHub">
+                        <RefreshCw size={11}/>
+                      </button>
+                      <button data-testid={`reclaim-btn-${r.id}`} onClick={() => reclaim(r.id)} className="btn-danger text-[12px] py-1.5 px-3 inline-flex items-center gap-1.5">
+                        <RotateCcw size={12} /> Reclaim
+                      </button>
+                    </div>
                   ) : <span className="text-[11px] text-zinc-400">—</span>}
                 </td>
               </tr>

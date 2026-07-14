@@ -118,6 +118,7 @@ export default function Reclamation() {
               <th>Project</th>
               <th>Cost Center</th>
               <th>Last renewal</th>
+              <th>GitHub activity</th>
               <th>Reasons</th>
               <th className="num">Action</th>
             </tr>
@@ -136,6 +137,13 @@ export default function Reclamation() {
                 <td>{r.project}</td>
                 <td className="font-mono text-[12px]">{r.cost_center}</td>
                 <td className="font-mono text-[12px]">{r.last_renewal_at ? new Date(r.last_renewal_at).toLocaleDateString() : "—"}</td>
+                <td>
+                  {r.gh_last_activity_at ? (
+                    <span className="text-[12px] text-zinc-700" title={r.gh_last_activity_at}>GitHub confirms {Math.floor((Date.now() - new Date(r.gh_last_activity_at).getTime()) / 86400000)}d idle</span>
+                  ) : r.github_username ? (
+                    <span className="text-[11px] text-zinc-400">No GitHub activity data</span>
+                  ) : <span className="text-[11px] text-zinc-400">Not linked</span>}
+                </td>
                 <td>
                   <div className="flex gap-1.5 flex-wrap">
                     {r.reclaim_reasons.map((rr) => (
